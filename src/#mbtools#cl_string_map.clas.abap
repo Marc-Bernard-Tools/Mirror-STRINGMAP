@@ -1,7 +1,7 @@
 CLASS /mbtools/cl_string_map DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -11,11 +11,11 @@ CLASS /mbtools/cl_string_map DEFINITION
       BEGIN OF ty_entry,
         k TYPE string,
         v TYPE string,
-      END OF ty_entry .
+      END OF ty_entry.
     TYPES:
-      tty_entries TYPE STANDARD TABLE OF ty_entry WITH KEY k .
+      tty_entries TYPE STANDARD TABLE OF ty_entry WITH KEY k.
     TYPES:
-      tts_entries TYPE SORTED TABLE OF ty_entry WITH UNIQUE KEY k .
+      tts_entries TYPE SORTED TABLE OF ty_entry WITH UNIQUE KEY k.
 
     DATA mt_entries TYPE tts_entries READ-ONLY.
 
@@ -24,7 +24,7 @@ CLASS /mbtools/cl_string_map DEFINITION
         !iv_case_insensitive TYPE abap_bool DEFAULT abap_false
         !iv_from TYPE any OPTIONAL
       RETURNING
-        VALUE(ro_instance) TYPE REF TO /mbtools/cl_string_map .
+        VALUE(ro_instance) TYPE REF TO /mbtools/cl_string_map.
     METHODS constructor
       IMPORTING
         !iv_case_insensitive TYPE abap_bool DEFAULT abap_false
@@ -34,12 +34,12 @@ CLASS /mbtools/cl_string_map DEFINITION
       IMPORTING
         !iv_key TYPE clike
       RETURNING
-        VALUE(rv_val) TYPE string .
+        VALUE(rv_val) TYPE string.
     METHODS has
       IMPORTING
         !iv_key TYPE clike
       RETURNING
-        VALUE(rv_has) TYPE abap_bool .
+        VALUE(rv_has) TYPE abap_bool.
     METHODS set
       IMPORTING
         !iv_key TYPE clike
@@ -48,19 +48,19 @@ CLASS /mbtools/cl_string_map DEFINITION
         VALUE(ro_map) TYPE REF TO /mbtools/cl_string_map.
     METHODS size
       RETURNING
-        VALUE(rv_size) TYPE i .
+        VALUE(rv_size) TYPE i.
     METHODS is_empty
       RETURNING
-        VALUE(rv_yes) TYPE abap_bool .
+        VALUE(rv_yes) TYPE abap_bool.
     METHODS delete
       IMPORTING
-        !iv_key TYPE clike .
+        !iv_key TYPE clike.
     METHODS keys
       RETURNING
-        VALUE(rt_keys) TYPE string_table .
+        VALUE(rt_keys) TYPE string_table.
     METHODS values
       RETURNING
-        VALUE(rt_values) TYPE string_table .
+        VALUE(rt_values) TYPE string_table.
     METHODS clear.
     METHODS to_struc
       CHANGING
@@ -81,7 +81,7 @@ CLASS /mbtools/cl_string_map DEFINITION
       IMPORTING
         !iv_strict TYPE abap_bool DEFAULT abap_true
       RETURNING
-        VALUE(ro_instance) TYPE REF TO /mbtools/cl_string_map .
+        VALUE(ro_instance) TYPE REF TO /mbtools/cl_string_map.
     METHODS freeze.
 
   PROTECTED SECTION.
@@ -91,10 +91,7 @@ CLASS /mbtools/cl_string_map DEFINITION
     DATA mv_case_insensitive TYPE abap_bool.
 ENDCLASS.
 
-
-
 CLASS /mbtools/cl_string_map IMPLEMENTATION.
-
 
   METHOD clear.
 
@@ -105,7 +102,6 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     CLEAR mt_entries.
 
   ENDMETHOD.
-
 
   METHOD constructor.
     mv_is_strict = abap_true.
@@ -141,14 +137,12 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD create.
     CREATE OBJECT ro_instance
       EXPORTING
         iv_case_insensitive = iv_case_insensitive
         iv_from = iv_from.
   ENDMETHOD.
-
 
   METHOD delete.
 
@@ -168,11 +162,9 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD freeze.
     mv_read_only = abap_true.
   ENDMETHOD.
-
 
   METHOD from_entries.
 
@@ -189,7 +181,6 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
 
   METHOD from_string.
 
@@ -219,7 +210,6 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
 
   METHOD from_struc.
 
@@ -252,7 +242,6 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD get.
 
     DATA lv_key TYPE string.
@@ -271,7 +260,6 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD has.
 
     DATA lv_key TYPE string.
@@ -287,11 +275,9 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD is_empty.
     rv_yes = boolc( lines( mt_entries ) = 0 ).
   ENDMETHOD.
-
 
   METHOD keys.
 
@@ -301,7 +287,6 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
 
   METHOD set.
 
@@ -332,19 +317,16 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD size.
 
     rv_size = lines( mt_entries ).
 
   ENDMETHOD.
 
-
   METHOD strict.
     mv_is_strict = iv_strict.
     ro_instance = me.
   ENDMETHOD.
-
 
   METHOD to_string.
 
@@ -360,7 +342,6 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
 
   METHOD to_struc.
 
@@ -391,7 +372,6 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
 
   METHOD values.
 
