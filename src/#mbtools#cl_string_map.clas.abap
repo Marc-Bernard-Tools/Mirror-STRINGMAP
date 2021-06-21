@@ -91,7 +91,9 @@ CLASS /mbtools/cl_string_map DEFINITION
     DATA mv_case_insensitive TYPE abap_bool.
 ENDCLASS.
 
+
 CLASS /mbtools/cl_string_map IMPLEMENTATION.
+
 
   METHOD clear.
 
@@ -102,6 +104,7 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     CLEAR mt_entries.
 
   ENDMETHOD.
+
 
   METHOD constructor.
     mv_is_strict = abap_true.
@@ -137,12 +140,14 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD create.
     CREATE OBJECT ro_instance
       EXPORTING
         iv_case_insensitive = iv_case_insensitive
         iv_from = iv_from.
   ENDMETHOD.
+
 
   METHOD delete.
 
@@ -162,9 +167,11 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD freeze.
     mv_read_only = abap_true.
   ENDMETHOD.
+
 
   METHOD from_entries.
 
@@ -181,6 +188,7 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
 
   METHOD from_string.
 
@@ -210,6 +218,7 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
 
   METHOD from_struc.
 
@@ -242,6 +251,7 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD get.
 
     DATA lv_key TYPE string.
@@ -260,6 +270,7 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD has.
 
     DATA lv_key TYPE string.
@@ -275,9 +286,11 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD is_empty.
     rv_yes = boolc( lines( mt_entries ) = 0 ).
   ENDMETHOD.
+
 
   METHOD keys.
 
@@ -287,6 +300,7 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
 
   METHOD set.
 
@@ -317,16 +331,19 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD size.
 
     rv_size = lines( mt_entries ).
 
   ENDMETHOD.
 
+
   METHOD strict.
     mv_is_strict = iv_strict.
     ro_instance = me.
   ENDMETHOD.
+
 
   METHOD to_string.
 
@@ -342,6 +359,7 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
 
   METHOD to_struc.
 
@@ -372,6 +390,7 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
 
   METHOD values.
 
