@@ -30,7 +30,7 @@
     "begin_end_names": true,
     "begin_single_include": true,
     "call_transaction_authority_check": true,
-    "chain_mainly_declarations": false,
+    "chain_mainly_declarations": true,
     "check_abstract": true,
     "check_comments": false,
     "check_ddic": true,
@@ -47,11 +47,11 @@
     "constructor_visibility_public": true,
     "contains_tab": true,
     "cyclomatic_complexity": false,
-    "definitions_top": false,
+    "definitions_top": true,
     "description_empty": true,
-    "double_space": false,
+    "double_space": true,
     "downport": true,
-    "empty_line_in_statement": false,
+    "empty_line_in_statement": true,
     "empty_statement": true,
     "empty_structure": false,
     "exit_or_check": false,
@@ -144,7 +144,7 @@
       "typePools": true,
       "load": false
     },
-    "omit_parameter_name": false,
+    "omit_parameter_name": true,
     "parser_error": true,
     "parser_missing_space": true,
     "prefer_inline": false,
@@ -169,7 +169,7 @@
     "sequential_blank": {
       "exclude": [],
       "severity": "Error",
-      "lines": 4
+      "lines": 2
     },
     "short_case": {
       "exclude": [],
@@ -182,8 +182,8 @@
     "space_before_dot": {
       "exclude": [],
       "severity": "Error",
-      "ignoreGlobalDefinition": true,
-      "ignoreExceptions": true
+      "ignoreGlobalDefinition": false,
+      "ignoreExceptions": false
     },
     "sql_escape_host_variables": false,
     "start_at_tab": true,
