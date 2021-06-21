@@ -169,7 +169,7 @@
     "sequential_blank": {
       "exclude": [],
       "severity": "Error",
-      "lines": 2
+      "lines": 3
     },
     "short_case": {
       "exclude": [],
