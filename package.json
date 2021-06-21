@@ -2,7 +2,7 @@
   "name": "stringmap_mirror",
   "private": true,
   "version": "1.0.0",
-  "description": "Mirror of (ajson)[https://github.com/sbcgua/abap-string-map] mirror to /mbtools/ namespace",
+  "description": "Mirror of (abap string map)[https://github.com/sbcgua/abap-string-map] to /MBTOOLS/ namespace",
   "main": "index.js",
   "scripts": {
     "clone": "git clone https://github.com/sbcgua/abap-string-map input",
@@ -15,12 +15,12 @@
     "type": "git",
     "url": "git+https://github.com/Marc-Bernard-Tools/Mirror-STRINGMAP.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Alexander Tsybulsky",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Marc-Bernard-Tools/Mirror-STRINGMAP/issues"
+    "url": "https://github.com/sbcgua/abap-string-map/issues"
   },
-  "homepage": "htthttps://github.com/Marc-Bernard-Tools/Mirror-STRINGMAP#readme",
+  "homepage": "https://github.com/sbcgua/abap-string-map",
   "dependencies": {
     "@abaplint/cli": "^2.74.48"
   }
