@@ -152,7 +152,7 @@
     "prefer_returning_to_exporting": false,
     "prefer_xsdbool": false,
     "preferred_compare_operator": false,
-    "prefix_is_current_class": false,
+    "prefix_is_current_class": true,
     "reduce_string_templates": true,
     "release_idoc": true,
     "remove_descriptions": false,
