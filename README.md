@@ -1,7 +1,7 @@
-# Mirror-AJSON
+# Mirror-STRINGMAP
 
-abap json (ajson) mirror
+abap string map mirror
 
-https://github.com/sbcgua/ajson
+https://github.com/sbcgua/abap-string-map
 
-Under [MIT License](https://github.com/sbcgua/ajson/blob/master/LICENSE): Copyright (c) 2020 Alexander Tsybulsky
+Under [MIT License](https://github.com/sbcgua/abap-string-map/blob/master/LICENSE): Copyright (c) 2020 Alexander Tsybulsky
