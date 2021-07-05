@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
     - name: Use Node.js
       uses: actions/setup-node@v2
     - name: Run Mirror
@@ -19,7 +20,7 @@ jobs:
         npm install
         npm run mirror
         git status
-    - name: Open PR
+    - name: Open Pull Request
       uses: peter-evans/create-pull-request@v3
       with:
         title: Automatic Update
