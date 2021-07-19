@@ -107,11 +107,13 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
 
   METHOD constructor.
+    DATA lo_type TYPE REF TO cl_abap_typedescr.
+    DATA lo_from TYPE REF TO /mbtools/cl_string_map.
     mv_is_strict = abap_true.
     mv_case_insensitive = iv_case_insensitive.
 
     IF iv_from IS NOT INITIAL.
-      DATA lo_type TYPE REF TO cl_abap_typedescr.
+
       lo_type = cl_abap_typedescr=>describe_by_data( iv_from ).
 
       CASE lo_type->type_kind.
@@ -119,7 +121,7 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
           me->from_struc( iv_from ).
 
         WHEN cl_abap_typedescr=>typekind_oref.
-          DATA lo_from TYPE REF TO /mbtools/cl_string_map.
+
           TRY.
               lo_from ?= iv_from.
             CATCH cx_sy_move_cast_error.
@@ -150,12 +152,12 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
 
   METHOD delete.
+    DATA lv_key TYPE string.
 
     IF mv_read_only = abap_true.
       lcx_error=>raise( 'String map is read only' ).
     ENDIF.
 
-    DATA lv_key TYPE string.
 
     IF mv_case_insensitive = abap_true.
       lv_key = to_upper( iv_key ).
@@ -191,17 +193,19 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
 
   METHOD from_string.
+    DATA lt_lines TYPE string_table.
+    FIELD-SYMBOLS <i> LIKE LINE OF lt_lines.
+    DATA lv_key TYPE string.
+    DATA lv_val TYPE string.
 
     IF iv_string_params IS INITIAL.
       RETURN.
     ENDIF.
 
-    DATA lt_lines TYPE string_table.
-    FIELD-SYMBOLS <i> LIKE LINE OF lt_lines.
+
     SPLIT iv_string_params AT ',' INTO TABLE lt_lines.
 
-    DATA lv_key TYPE string.
-    DATA lv_val TYPE string.
+
     LOOP AT lt_lines ASSIGNING <i>.
       SPLIT <i> AT '=' INTO lv_key lv_val.
       SHIFT lv_key RIGHT DELETING TRAILING space.
