@@ -17,17 +17,23 @@ CLASS ltcl_string_map DEFINITION
     METHODS size_empty_clear FOR TESTING.
     METHODS delete FOR TESTING.
     METHODS keys_values FOR TESTING.
-    METHODS to_struc FOR TESTING.
-    METHODS from_struc FOR TESTING.
-    METHODS strict FOR TESTING.
-    METHODS from_to_struc_negative FOR TESTING.
-    METHODS from_entries FOR TESTING.
-    METHODS freeze FOR TESTING.
-    METHODS create_from FOR TESTING.
     METHODS case_insensitive FOR TESTING.
     METHODS set_clike FOR TESTING.
+
+    METHODS strict FOR TESTING.
+    METHODS freeze FOR TESTING.
+
+    METHODS from_struc FOR TESTING.
+    METHODS from_to_struc_negative FOR TESTING.
+    METHODS from_entries FOR TESTING.
     METHODS from_string FOR TESTING.
+    METHODS from_map FOR TESTING.
+
+    METHODS to_struc FOR TESTING.
     METHODS to_string FOR TESTING.
+
+    METHODS create_from FOR TESTING.
+    METHODS case_insensitive_create FOR TESTING.
 
 ENDCLASS.
 
@@ -46,7 +52,7 @@ CLASS ltcl_string_map IMPLEMENTATION.
       iv_val = '1' ).
 
     TRY.
-        /mbtools/cl_string_map=>create( iv_from = 12345 ).
+        /mbtools/cl_string_map=>create( 12345 ).
         cl_abap_unit_assert=>fail( ).
       CATCH cx_root INTO lx_e.
         cl_abap_unit_assert=>assert_equals(
@@ -55,7 +61,7 @@ CLASS ltcl_string_map IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        /mbtools/cl_string_map=>create( iv_from = me ).
+        /mbtools/cl_string_map=>create( me ).
         cl_abap_unit_assert=>fail( ).
       CATCH cx_root INTO lx_e.
         cl_abap_unit_assert=>assert_equals(
@@ -64,7 +70,7 @@ CLASS ltcl_string_map IMPLEMENTATION.
     ENDTRY.
 
     " From obj
-    lo_cut = /mbtools/cl_string_map=>create( iv_from = lo_src ).
+    lo_cut = /mbtools/cl_string_map=>create( lo_src ).
     cl_abap_unit_assert=>assert_equals(
       exp = 1
       act = lo_cut->size( ) ).
@@ -73,7 +79,7 @@ CLASS ltcl_string_map IMPLEMENTATION.
       act = lo_cut->get( 'A' ) ).
 
     " From tab
-    lo_cut = /mbtools/cl_string_map=>create( iv_from = lo_src->mt_entries ).
+    lo_cut = /mbtools/cl_string_map=>create( lo_src->mt_entries ).
     cl_abap_unit_assert=>assert_equals(
       exp = 1
       act = lo_cut->size( ) ).
@@ -82,13 +88,31 @@ CLASS ltcl_string_map IMPLEMENTATION.
       act = lo_cut->get( 'A' ) ).
 
     " From struc
-    lo_cut = /mbtools/cl_string_map=>create( iv_from = ls_dummy ).
+    lo_cut = /mbtools/cl_string_map=>create( ls_dummy ).
     cl_abap_unit_assert=>assert_equals(
       exp = 1
       act = lo_cut->size( ) ).
     cl_abap_unit_assert=>assert_equals(
       exp = '1'
       act = lo_cut->get( 'A' ) ).
+
+    " From string
+    lo_cut = /mbtools/cl_string_map=>create( 'x=y' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->size( )
+      exp = 1 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->get( 'x' )
+      exp = 'y' ).
+
+    " From another map
+    lo_cut = /mbtools/cl_string_map=>create( /mbtools/cl_string_map=>create( 'x=1' ) ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->size( )
+      exp = 1 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->get( 'x' )
+      exp = '1' ).
 
   ENDMETHOD.
 
@@ -98,6 +122,8 @@ CLASS ltcl_string_map IMPLEMENTATION.
     DATA ls_dummy TYPE syst.
     DATA lx_e TYPE REF TO cx_root.
     DATA lo_cut TYPE REF TO /mbtools/cl_string_map.
+    FIELD-SYMBOLS <l> LIKE LINE OF lt_entries.
+
     lo_cut = /mbtools/cl_string_map=>create( ).
 
     lo_cut->set(
@@ -145,6 +171,9 @@ CLASS ltcl_string_map IMPLEMENTATION.
     ENDTRY.
 
     TRY.
+
+        APPEND INITIAL LINE TO lt_entries ASSIGNING <l>.
+        <l>-k = 'a'.
         lo_cut->from_entries( lt_entries ).
         cl_abap_unit_assert=>fail( ).
       CATCH cx_root INTO lx_e.
@@ -164,6 +193,15 @@ CLASS ltcl_string_map IMPLEMENTATION.
 
     TRY.
         lo_cut->from_string( 'x=y' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH cx_root INTO lx_e.
+        cl_abap_unit_assert=>assert_equals(
+        exp = 'String map is read only'
+        act = lx_e->get_text( ) ).
+    ENDTRY.
+
+    TRY.
+        lo_cut->from_map( /mbtools/cl_string_map=>create( iv_from = 'x=y' ) ).
         cl_abap_unit_assert=>fail( ).
       CATCH cx_root INTO lx_e.
         cl_abap_unit_assert=>assert_equals(
@@ -375,10 +413,10 @@ CLASS ltcl_string_map IMPLEMENTATION.
       iv_key = 'z'
       iv_val = 'xyz' ).
 
-    lo_cut->from_struc( ls_struc ).
+    lo_cut = lo_cut->from_struc( ls_struc ).
 
     cl_abap_unit_assert=>assert_equals(
-      exp = 3
+      exp = 4
       act = lo_cut->size( ) ).
     cl_abap_unit_assert=>assert_equals(
       exp = 'avalue'
@@ -389,6 +427,9 @@ CLASS ltcl_string_map IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = '123'
       act = lo_cut->get( 'C' ) ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'xyz'
+      act = lo_cut->get( 'z' ) ).
 
   ENDMETHOD.
 
@@ -484,10 +525,14 @@ CLASS ltcl_string_map IMPLEMENTATION.
     ls_entry-val = '123'.
     APPEND ls_entry TO lt_entries.
 
-    lo_cut->from_entries( lt_entries ).
+    lo_cut->set(
+      iv_key = 'z'
+      iv_val = 'xyz' ).
+
+    lo_cut = lo_cut->from_entries( lt_entries ).
 
     cl_abap_unit_assert=>assert_equals(
-      exp = 2
+      exp = 3
       act = lo_cut->size( ) ).
     cl_abap_unit_assert=>assert_equals(
       exp = 'avalue'
@@ -495,6 +540,9 @@ CLASS ltcl_string_map IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       exp = '123'
       act = lo_cut->get( 'B' ) ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'xyz'
+      act = lo_cut->get( 'z' ) ).
 
   ENDMETHOD.
 
@@ -552,6 +600,35 @@ CLASS ltcl_string_map IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD case_insensitive_create.
+
+    DATA lo_src TYPE REF TO /mbtools/cl_string_map.
+    DATA lo_cut TYPE REF TO /mbtools/cl_string_map.
+    DATA lt_exp_keys TYPE string_table.
+
+    lo_src = /mbtools/cl_string_map=>create( ).
+    lo_src->set(
+      iv_key = 'A'
+      iv_val = '1' ).
+    lo_src->set(
+      iv_key = 'b'
+      iv_val = '2' ).
+    lo_src->freeze( ).
+
+    lo_cut = /mbtools/cl_string_map=>create(
+      iv_from             = lo_src
+      iv_case_insensitive = abap_true ).
+
+
+    APPEND 'A' TO lt_exp_keys.
+    APPEND 'B' TO lt_exp_keys.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = lt_exp_keys
+      act = lo_cut->keys( ) ).
+
+  ENDMETHOD.
+
   METHOD set_clike.
 
     DATA lv_char TYPE c LENGTH 10.
@@ -594,11 +671,15 @@ CLASS ltcl_string_map IMPLEMENTATION.
     DATA lo_cut TYPE REF TO /mbtools/cl_string_map.
     lo_cut = /mbtools/cl_string_map=>create( ).
 
-    lo_cut->from_string( 'a = avalue, b = some data, c = space   space' ).
+    lo_cut->set(
+      iv_key = 'z'
+      iv_val = 'xyz' ).
+
+    lo_cut = lo_cut->from_string( 'a = avalue, b = some data, c = space   space' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->size( )
-      exp = 3 ).
+      exp = 4 ).
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->get( 'a' )
       exp = 'avalue' ).
@@ -608,6 +689,9 @@ CLASS ltcl_string_map IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->get( 'c' )
       exp = 'space   space' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->get( 'z' )
+      exp = 'xyz' ).
 
     TRY.
         lo_cut->from_string( `x=y,  ` ).
@@ -616,14 +700,6 @@ CLASS ltcl_string_map IMPLEMENTATION.
         act = lx_e->get_text( )
         exp = 'Empty key*' ).
     ENDTRY.
-
-    lo_cut = /mbtools/cl_string_map=>create( iv_from = 'x=y' ).
-    cl_abap_unit_assert=>assert_equals(
-      act = lo_cut->size( )
-      exp = 1 ).
-    cl_abap_unit_assert=>assert_equals(
-      act = lo_cut->get( 'x' )
-      exp = 'y' ).
 
   ENDMETHOD.
 
@@ -636,6 +712,58 @@ CLASS ltcl_string_map IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lo_cut->to_string( )
       exp = 'a=avalue,b=some data,c=space   space' ).
+
+  ENDMETHOD.
+
+  METHOD from_map.
+
+    DATA lo_src TYPE REF TO /mbtools/cl_string_map.
+    DATA lo_cut TYPE REF TO /mbtools/cl_string_map.
+
+    lo_src = /mbtools/cl_string_map=>create( ).
+    lo_src->set(
+      iv_key = 'a'
+      iv_val = '1' ).
+    lo_src->set(
+      iv_key = 'b'
+      iv_val = '2' ).
+    lo_src->freeze( ).
+
+    " Empty map
+    lo_cut = /mbtools/cl_string_map=>create( ).
+    lo_cut = lo_cut->from_map( lo_src ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->size( )
+      exp = 2 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->get( 'a' )
+      exp = '1' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->get( 'b' )
+      exp = '2' ).
+
+    " Existing values + overwrite
+    lo_cut = /mbtools/cl_string_map=>create( ).
+    lo_cut->set(
+      iv_key = 'a'
+      iv_val = 'x' ).
+    lo_cut->set(
+      iv_key = 'c'
+      iv_val = '3' ).
+
+    lo_cut->from_map( lo_src ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->size( )
+      exp = 3 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->get( 'a' )
+      exp = '1' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->get( 'b' )
+      exp = '2' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->get( 'c' )
+      exp = '3' ).
 
   ENDMETHOD.
 

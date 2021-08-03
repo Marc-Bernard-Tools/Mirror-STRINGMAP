@@ -6,6 +6,8 @@ CLASS /mbtools/cl_string_map DEFINITION
   PUBLIC SECTION.
 
     CONSTANTS version TYPE string VALUE 'v1.0.2'.
+    CONSTANTS origin TYPE string VALUE 'https://github.com/sbcgua/abap-string-map'.
+    CONSTANTS license TYPE string VALUE 'MIT'.
 
     TYPES:
       BEGIN OF ty_entry,
@@ -23,6 +25,7 @@ CLASS /mbtools/cl_string_map DEFINITION
       IMPORTING
         !iv_case_insensitive TYPE abap_bool DEFAULT abap_false
         !iv_from TYPE any OPTIONAL
+        PREFERRED PARAMETER iv_from
       RETURNING
         VALUE(ro_instance) TYPE REF TO /mbtools/cl_string_map.
     METHODS constructor
@@ -62,21 +65,35 @@ CLASS /mbtools/cl_string_map DEFINITION
       RETURNING
         VALUE(rt_values) TYPE string_table.
     METHODS clear.
+
+    METHODS from_struc
+      IMPORTING
+        !is_container TYPE any
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO /mbtools/cl_string_map.
+    METHODS from_entries
+      IMPORTING
+        !it_entries TYPE ANY TABLE
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO /mbtools/cl_string_map.
+    METHODS from_string
+      IMPORTING
+        !iv_string_params TYPE csequence
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO /mbtools/cl_string_map.
+    METHODS from_map
+      IMPORTING
+        !io_string_map TYPE REF TO /mbtools/cl_string_map
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO /mbtools/cl_string_map.
+
     METHODS to_struc
       CHANGING
         !cs_container TYPE any.
-    METHODS from_struc
-      IMPORTING
-        !is_container TYPE any.
-    METHODS from_entries
-      IMPORTING
-        !it_entries TYPE ANY TABLE.
-    METHODS from_string
-      IMPORTING
-        !iv_string_params TYPE csequence.
     METHODS to_string
       RETURNING
         VALUE(rv_string) TYPE string.
+
     METHODS strict
       IMPORTING
         !iv_strict TYPE abap_bool DEFAULT abap_true
@@ -127,7 +144,12 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
             CATCH cx_sy_move_cast_error.
               lcx_error=>raise( 'Incorrect string map instance to copy from' ).
           ENDTRY.
-          me->mt_entries = lo_from->mt_entries.
+
+          IF mt_entries IS INITIAL AND mv_case_insensitive = abap_false.
+            me->mt_entries = lo_from->mt_entries. " shortcut, maybe remove for safety
+          ELSE.
+            me->from_map( lo_from ).
+          ENDIF.
 
         WHEN cl_abap_typedescr=>typekind_table.
           me->from_entries( iv_from ).
@@ -179,15 +201,21 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
 
     FIELD-SYMBOLS <i> TYPE ty_entry.
 
-    IF mv_read_only = abap_true.
-      lcx_error=>raise( 'String map is read only' ).
-    ENDIF.
-
     LOOP AT it_entries ASSIGNING <i> CASTING.
       set(
         iv_key = <i>-k
         iv_val = <i>-v ).
     ENDLOOP.
+
+    ro_instance = me.
+
+  ENDMETHOD.
+
+
+  METHOD from_map.
+
+    from_entries( io_string_map->mt_entries ).
+    ro_instance = me.
 
   ENDMETHOD.
 
@@ -221,6 +249,8 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
         iv_val = lv_val ).
     ENDLOOP.
 
+    ro_instance = me.
+
   ENDMETHOD.
 
 
@@ -230,12 +260,6 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     DATA lo_struc TYPE REF TO cl_abap_structdescr.
     FIELD-SYMBOLS <c> LIKE LINE OF lo_struc->components.
     FIELD-SYMBOLS <val> TYPE any.
-
-    IF mv_read_only = abap_true.
-      lcx_error=>raise( 'String map is read only' ).
-    ENDIF.
-
-    CLEAR mt_entries.
 
     lo_type = cl_abap_typedescr=>describe_by_data( is_container ).
     IF lo_type->type_kind <> cl_abap_typedescr=>typekind_struct1
@@ -252,6 +276,8 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
         iv_key = |{ <c>-name }|
         iv_val = |{ <val> }| ).
     ENDLOOP.
+
+    ro_instance = me.
 
   ENDMETHOD.
 
