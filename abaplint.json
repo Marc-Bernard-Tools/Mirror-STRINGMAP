@@ -80,12 +80,7 @@
     "identical_form_names": true,
     "if_in_if": true,
     "implement_methods": true,
-    "in_statement_indentation": {
-      "blockStatements": 0,
-      "exclude": [],
-      "severity": "Error",
-      "ignoreExceptions": false
-    },
+    "in_statement_indentation": false,
     "indentation": {
       "exclude": [],
       "severity": "Error",
