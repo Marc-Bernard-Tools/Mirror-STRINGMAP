@@ -347,6 +347,8 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
         iv_val = <entry>-v ).
     ENDLOOP.
 
+    ro_instance = me.
+
   ENDMETHOD.
 
 
