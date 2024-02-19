@@ -25,5 +25,6 @@ jobs:
     - name: Open Pull Request
       uses: peter-evans/create-pull-request@v5
       with:
+        node-version: 20
         title: Automatic Update
         labels: automerge
