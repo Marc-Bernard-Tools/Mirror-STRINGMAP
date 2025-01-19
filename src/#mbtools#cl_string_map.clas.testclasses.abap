@@ -19,6 +19,7 @@ CLASS ltcl_string_map DEFINITION
     METHODS keys_values FOR TESTING.
     METHODS case_insensitive FOR TESTING.
     METHODS set_clike FOR TESTING.
+    METHODS setx FOR TESTING.
 
     METHODS strict FOR TESTING.
     METHODS freeze FOR TESTING.
@@ -32,9 +33,11 @@ CLASS ltcl_string_map DEFINITION
 
     METHODS to_struc FOR TESTING.
     METHODS to_string FOR TESTING.
+    METHODS to_entries FOR TESTING.
 
     METHODS create_from FOR TESTING.
     METHODS case_insensitive_create FOR TESTING.
+    METHODS list_mode FOR TESTING.
 
 ENDCLASS.
 
@@ -837,5 +840,167 @@ CLASS ltcl_string_map IMPLEMENTATION.
       exp = '400' ).
 
   ENDMETHOD.
+
+
+  METHOD to_entries.
+
+    TYPES:
+      BEGIN OF lty_str,
+        a TYPE string,
+        b TYPE string,
+      END OF lty_str,
+      lty_str_t TYPE STANDARD TABLE OF lty_str,
+      BEGIN OF lty_char,
+        a TYPE c LENGTH 10,
+        b TYPE c LENGTH 10,
+      END OF lty_char,
+      lty_char_t TYPE STANDARD TABLE OF lty_char,
+      BEGIN OF lty_bad1,
+        a TYPE c LENGTH 10,
+      END OF lty_bad1,
+      lty_bad1_t TYPE STANDARD TABLE OF lty_bad1,
+      BEGIN OF lty_bad2,
+        a TYPE i,
+        b TYPE i,
+      END OF lty_bad2,
+      lty_bad2_t TYPE STANDARD TABLE OF lty_bad2.
+
+    DATA lo_cut TYPE REF TO /mbtools/cl_string_map.
+    DATA lt_str_act TYPE lty_str_t.
+    DATA lt_str_exp TYPE lty_str_t.
+    DATA ls_str LIKE LINE OF lt_str_act.
+    DATA lt_char_act TYPE lty_char_t.
+    DATA lt_char_exp TYPE lty_char_t.
+    DATA ls_char LIKE LINE OF lt_char_act.
+    DATA lx TYPE REF TO lcx_error.
+    DATA lt_bad1 TYPE lty_bad1_t.
+    DATA lt_bad2 TYPE lty_bad2_t.
+    DATA lt_bad3 TYPE string_table.
+    lo_cut = /mbtools/cl_string_map=>create( `x=1,y=2` ).
+
+
+    ls_str-a = 'x'.
+    ls_str-b = '1'.
+    APPEND ls_str TO lt_str_exp.
+    ls_str-a = 'y'.
+    ls_str-b = '2'.
+    APPEND ls_str TO lt_str_exp.
+    lo_cut->to_entries( CHANGING ct_entries = lt_str_act ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_str_act
+      exp = lt_str_exp ).
+
+    ls_char-a = 'x'.
+    ls_char-b = '1'.
+    APPEND ls_char TO lt_char_exp.
+    ls_char-a = 'y'.
+    ls_char-b = '2'.
+    APPEND ls_char TO lt_char_exp.
+    lo_cut->to_entries( CHANGING ct_entries = lt_char_act ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_char_act
+      exp = lt_char_exp ).
+
+
+    TRY.
+        lo_cut->to_entries( CHANGING ct_entries = lt_bad1 ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH lcx_error INTO lx.
+        cl_abap_unit_assert=>assert_char_cp(
+        act = lx->get_text( )
+        exp = '*number*' ).
+    ENDTRY.
+
+
+    TRY.
+        lo_cut->to_entries( CHANGING ct_entries = lt_bad2 ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH lcx_error INTO lx.
+        cl_abap_unit_assert=>assert_char_cp(
+        act = lx->get_text( )
+        exp = '*type*' ).
+    ENDTRY.
+
+
+    TRY.
+        lo_cut->to_entries( CHANGING ct_entries = lt_bad3 ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH lcx_error INTO lx.
+        cl_abap_unit_assert=>assert_char_cp(
+        act = lx->get_text( )
+        exp = '*table line*' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD setx.
+
+    DATA lo_cut TYPE REF TO /mbtools/cl_string_map.
+
+    lo_cut = /mbtools/cl_string_map=>create( ).
+
+    lo_cut->setx( 'a:1' ).
+    lo_cut->setx( |b : 2| ).
+    lo_cut->setx( ':c' ).
+    lo_cut->setx( '' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 2
+      act = lo_cut->size( ) ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = lo_cut->get( 'a' )
+      act = '1' ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = lo_cut->get( 'b' )
+      act = '2' ).
+
+  ENDMETHOD.
+
+  METHOD list_mode.
+
+    DATA lo_cut TYPE REF TO /mbtools/cl_string_map.
+    DATA lt_entries TYPE /mbtools/cl_string_map=>tty_entries.
+    DATA ls_item LIKE LINE OF lt_entries.
+
+    lo_cut = /mbtools/cl_string_map=>create( ).
+    lo_cut->setx( 'a:1' ).
+    lo_cut->setx( 'a:2' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lo_cut->size( ) ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = lo_cut->get( 'a' )
+      act = '2' ).
+
+    lo_cut = /mbtools/cl_string_map=>create( iv_list_mode = abap_true ).
+    lo_cut->setx( 'a:1' ).
+    lo_cut->setx( 'a:2' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 2
+      act = lo_cut->size( ) ).
+
+
+    lt_entries = lo_cut->mt_entries.
+    SORT lt_entries BY k v.
+
+    READ TABLE lt_entries INDEX 1 INTO ls_item.
+    cl_abap_unit_assert=>assert_equals(
+      exp = '1'
+      act = ls_item-v ).
+
+    READ TABLE lt_entries INDEX 2 INTO ls_item.
+    cl_abap_unit_assert=>assert_equals(
+      exp = '2'
+      act = ls_item-v ).
+
+    lo_cut->delete( 'a' ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = lo_cut->size( ) ).
+
+  ENDMETHOD.
+
 
 ENDCLASS.

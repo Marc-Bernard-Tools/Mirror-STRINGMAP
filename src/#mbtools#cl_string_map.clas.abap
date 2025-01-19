@@ -5,7 +5,7 @@ CLASS /mbtools/cl_string_map DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS version TYPE string VALUE 'v1.0.3'.
+    CONSTANTS version TYPE string VALUE 'v1.0.5'.
     CONSTANTS origin TYPE string VALUE 'https://github.com/sbcgua/abap-string-map'.
     CONSTANTS license TYPE string VALUE 'MIT'.
 
@@ -17,13 +17,15 @@ CLASS /mbtools/cl_string_map DEFINITION
     TYPES:
       tty_entries TYPE STANDARD TABLE OF ty_entry WITH KEY k.
     TYPES:
-      tts_entries TYPE SORTED TABLE OF ty_entry WITH UNIQUE KEY k.
+      tts_entries TYPE SORTED TABLE OF ty_entry WITH NON-UNIQUE KEY k.
 
     DATA mt_entries TYPE tts_entries READ-ONLY.
 
     CLASS-METHODS create
       IMPORTING
         !iv_case_insensitive TYPE abap_bool DEFAULT abap_false
+        !iv_list_mode TYPE abap_bool DEFAULT abap_false " removes uniqueness requirement,
+                                                        " use with care: it is not the primary scenario
         !iv_from TYPE any OPTIONAL
         PREFERRED PARAMETER iv_from
       RETURNING
@@ -31,6 +33,8 @@ CLASS /mbtools/cl_string_map DEFINITION
     METHODS constructor
       IMPORTING
         !iv_case_insensitive TYPE abap_bool DEFAULT abap_false
+        !iv_list_mode TYPE abap_bool DEFAULT abap_false " removes uniqueness requirement,
+                                                        " use with care: it is not the primary scenario
         !iv_from TYPE any OPTIONAL.
 
     METHODS get
@@ -47,6 +51,11 @@ CLASS /mbtools/cl_string_map DEFINITION
       IMPORTING
         !iv_key TYPE clike
         !iv_val TYPE clike
+      RETURNING
+        VALUE(ro_map) TYPE REF TO /mbtools/cl_string_map.
+    METHODS setx
+      IMPORTING
+        !iv_str TYPE csequence
       RETURNING
         VALUE(ro_map) TYPE REF TO /mbtools/cl_string_map.
     METHODS size
@@ -98,6 +107,9 @@ CLASS /mbtools/cl_string_map DEFINITION
     METHODS to_string
       RETURNING
         VALUE(rv_string) TYPE string.
+    METHODS to_entries
+      CHANGING
+        !ct_entries TYPE STANDARD TABLE.
 
     METHODS strict
       IMPORTING
@@ -111,6 +123,7 @@ CLASS /mbtools/cl_string_map DEFINITION
     DATA mv_is_strict TYPE abap_bool.
     DATA mv_read_only TYPE abap_bool.
     DATA mv_case_insensitive TYPE abap_bool.
+    DATA mv_list_mode TYPE abap_bool.
 ENDCLASS.
 
 
@@ -133,6 +146,7 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
     DATA lo_from TYPE REF TO /mbtools/cl_string_map.
     mv_is_strict = abap_true.
     mv_case_insensitive = iv_case_insensitive.
+    mv_list_mode = iv_list_mode.
 
     IF iv_from IS NOT INITIAL.
 
@@ -173,6 +187,7 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
   METHOD create.
     CREATE OBJECT ro_instance
       EXPORTING
+        iv_list_mode = iv_list_mode
         iv_case_insensitive = iv_case_insensitive
         iv_from = iv_from.
   ENDMETHOD.
@@ -368,16 +383,48 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
       lv_key = iv_key.
     ENDIF.
 
-    READ TABLE mt_entries ASSIGNING <entry> WITH KEY k = lv_key.
-    IF sy-subrc = 0.
-      <entry>-v = iv_val.
-    ELSE.
+    IF mv_list_mode = abap_true.
       ls_entry-k = lv_key.
       ls_entry-v = iv_val.
       INSERT ls_entry INTO TABLE mt_entries.
+    ELSE.
+      READ TABLE mt_entries ASSIGNING <entry> WITH KEY k = lv_key.
+      IF sy-subrc = 0.
+        <entry>-v = iv_val.
+      ELSE.
+        ls_entry-k = lv_key.
+        ls_entry-v = iv_val.
+        INSERT ls_entry INTO TABLE mt_entries.
+      ENDIF.
     ENDIF.
 
     ro_map = me.
+
+  ENDMETHOD.
+
+
+  METHOD setx.
+
+    DATA lv_key TYPE string.
+    DATA lv_val TYPE string.
+
+    ro_map = me.
+
+    IF iv_str IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    SPLIT iv_str AT ':' INTO lv_key lv_val.
+    CONDENSE lv_key.
+    CONDENSE lv_val.
+
+    IF lv_key IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    set(
+      iv_key = lv_key
+      iv_val = lv_val ).
 
   ENDMETHOD.
 
@@ -392,6 +439,52 @@ CLASS /mbtools/cl_string_map IMPLEMENTATION.
   METHOD strict.
     mv_is_strict = iv_strict.
     ro_instance = me.
+  ENDMETHOD.
+
+
+  METHOD to_entries.
+
+    DATA lo_ttype TYPE REF TO cl_abap_tabledescr.
+    DATA lo_dtype TYPE REF TO cl_abap_datadescr.
+    DATA lo_stype TYPE REF TO cl_abap_structdescr.
+    FIELD-SYMBOLS <c> LIKE LINE OF lo_stype->components.
+    FIELD-SYMBOLS <entry> LIKE LINE OF mt_entries.
+    FIELD-SYMBOLS <to> TYPE any.
+    FIELD-SYMBOLS <k> TYPE any.
+    FIELD-SYMBOLS <v> TYPE any.
+
+    lo_ttype ?= cl_abap_typedescr=>describe_by_data( ct_entries ).
+    lo_dtype = lo_ttype->get_table_line_type( ).
+
+    IF lo_dtype->kind <> cl_abap_typedescr=>kind_struct.
+      lcx_error=>raise( 'Unsupported table line type' ).
+    ENDIF.
+
+    lo_stype ?= lo_dtype.
+
+    IF lines( lo_stype->components ) <> 2.
+      lcx_error=>raise( 'Wrong number of fields in target table (must be 2)' ).
+    ENDIF.
+
+
+    LOOP AT lo_stype->components ASSIGNING <c>.
+      IF NOT ( <c>-type_kind = cl_abap_typedescr=>typekind_char OR <c>-type_kind = cl_abap_typedescr=>typekind_string ).
+        lcx_error=>raise( 'Wrong type of fields in target table (must be char or string)' ).
+      ENDIF.
+    ENDLOOP.
+
+
+    LOOP AT mt_entries ASSIGNING <entry>.
+      APPEND INITIAL LINE TO ct_entries ASSIGNING <to>.
+      ASSERT sy-subrc = 0.
+      ASSIGN COMPONENT 1 OF STRUCTURE <to> TO <k>.
+      ASSERT sy-subrc = 0.
+      ASSIGN COMPONENT 2 OF STRUCTURE <to> TO <v>.
+      ASSERT sy-subrc = 0.
+      <k> = <entry>-k.
+      <v> = <entry>-v.
+    ENDLOOP.
+
   ENDMETHOD.
 
 
